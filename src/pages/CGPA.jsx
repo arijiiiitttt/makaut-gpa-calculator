@@ -41,15 +41,25 @@ const CGPA = ({ darkMode }) => {
       let hasError = false;
 
       semesters.forEach(({ sgpa, credits }) => {
-        if (!sgpa || !credits) hasError = true;
-        const s = Number(sgpa);
-        const c = Number(credits);
-        totalCredits += c;
-        totalWeightedSgpa += s * c;
+        const numSgpa = Number(sgpa);
+        const numCredits = Number(credits);
+
+        if (isNaN(numSgpa) || isNaN(numCredits) || sgpa === '' || credits === '' || numSgpa < 0 || numSgpa > 10 || numCredits <= 0) {
+          hasError = true;
+          return;
+        }
+        totalCredits += numCredits;
+        totalWeightedSgpa += numSgpa * numCredits;
       });
 
       if (hasError) {
-        setError('Please fill all fields before calculating.');
+        setError('Please fill all fields with valid numbers (SGPA 0-10, Credits > 0).');
+        setResult(null);
+        return;
+      }
+
+      if (totalCredits === 0) {
+        setError('Total credits cannot be zero. Please add semesters with valid credits.');
         setResult(null);
         return;
       }
@@ -57,7 +67,8 @@ const CGPA = ({ darkMode }) => {
       const cgpa = (totalWeightedSgpa / totalCredits).toFixed(2);
       setResult(cgpa);
     } catch (err) {
-      setError('An unexpected error occurred.');
+      console.error("CGPA Calculation Error:", err);
+      setError('An unexpected error occurred during calculation.');
       setResult(null);
     } finally {
       setIsCalculating(false);
@@ -71,128 +82,147 @@ const CGPA = ({ darkMode }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-800 dark:to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-gray-900 dark:to-gray-950 font-sans">
       <motion.div
-        className="max-w-3xl w-full p-6 sm:p-8 lg:p-10"
+        className="max-w-3xl w-full p-4 sm:p-6 md:p-8"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.4, type: "spring", stiffness: 150, damping: 20 }}
       >
-        <div className={`rounded-3xl shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-900 text-white' : 'bg-white'}`}>
-          <div className="px-6 py-10">
-            <div className="flex items-center justify-center mb-8">
-              <a href="/selection" className={`absolute left-6 top-6 p-3 rounded-full ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'} transition-colors duration-200`}>
-                <FiArrowLeft className="text-xl" />
-              </a>
-              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
-                CGPA Calculator
-              </h1>
-            </div>
+        <div className="px-6 py-8 sm:px-8 sm:py-10">
+          <div className="relative flex items-center justify-center mb-8">
+            {/* Optional back button, hidden as no /selection route */}
+            {/* <a href="/selection" className={`absolute left-0 p-3 rounded-full ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-700'} transition-colors duration-200`}>
+              <FiArrowLeft className="text-xl" />
+            </a> */}
+            <h1 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent text-center">
+              CGPA Calculator
+            </h1>
+          </div>
 
-            <div className="space-y-4">
-              <AnimatePresence>
-                {semesters.map((sem, index) => (
-                  <motion.div
-                    key={index}
-                    variants={semesterVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="flex items-center gap-4"
-                  >
-                    <div className={`flex-1 flex gap-4 p-4 rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-gray-50'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                      <div className="flex-1">
-                        <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>SGPA</label>
-                        <input
-                          type="number"
-                          placeholder="Enter SGPA"
-                          value={sem.sgpa}
-                          onChange={(e) => handleChange(index, 'sgpa', e.target.value)}
-                          className={`w-full px-3 py-2 rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500' : 'bg-white border-gray-300 focus:ring-purple-500 focus:border-purple-500'} shadow-sm focus:outline-none text-sm`}
-                          min="0"
-                          max="10"
-                          step="0.01"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Credits</label>
-                        <input
-                          type="number"
-                          placeholder="Enter credits"
-                          value={sem.credits}
-                          onChange={(e) => handleChange(index, 'credits', e.target.value)}
-                          className={`w-full px-3 py-2 rounded-md ${darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-purple-500 focus:border-purple-500' : 'bg-white border-gray-300 focus:ring-purple-500 focus:border-purple-500'} shadow-sm focus:outline-none text-sm`}
-                          min="1"
-                          max="50"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveSemester(index)}
-                      className={`p-2 rounded-full ${darkMode ? 'text-red-400 hover:bg-gray-800' : 'text-red-500 hover:bg-gray-100'} transition-colors duration-200`}
-                    >
-                      <FiTrash2 className="h-5 w-5" />
-                    </button>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            <div className="mt-8 flex items-center justify-center space-x-4">
-              <button
-                onClick={handleAddSemester}
-                className={`px-4 py-2 rounded-lg text-sm ${darkMode ? 'bg-purple-500 hover:bg-purple-600' : 'bg-purple-500 hover:bg-purple-600'} text-white font-semibold transition-colors duration-200`}
-              >
-                <FiPlus className="mr-2 h-4 w-4 inline-block" />
-                Add Semester
-              </button>
-
-              <button
-                onClick={calculateCGPA}
-                disabled={isCalculating}
-                className={`px-4 py-2 rounded-lg text-sm ${darkMode ? 'bg-pink-500 hover:bg-pink-600 disabled:bg-pink-700' : 'bg-pink-500 hover:bg-pink-600 disabled:bg-pink-300'} text-white font-semibold transition-colors duration-200 disabled:cursor-not-allowed`}
-              >
-                {isCalculating ? 'Calculating...' : 'Calculate CGPA'}
-              </button>
-            </div>
-
+          <div className="space-y-4">
             <AnimatePresence>
-              {error && (
+              {semesters.map((sem, index) => (
                 <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-6 p-4 rounded-md bg-red-100 text-red-700 flex items-center justify-center"
+                  key={index}
+                  variants={semesterVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="flex flex-col sm:flex-row items-center gap-4 py-4 bg rounded-full px-20 shadow-sm transition-colors duration-300 bg-white hover:shadow-md"
                 >
-                  <FiAlertCircle className="mr-3 h-5 w-5" />
-                  <p className="text-sm">{error}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {result && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.4, type: "spring", stiffness: 120, damping: 15 }}
-                  className={`mt-8 p-6 rounded-2xl ${darkMode ? 'bg-gray-800' : 'bg-purple-50'} transition-all text-center`}
-                >
-                  <h3 className={`text-lg font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Your CGPA</h3>
-                  <div className="flex items-center justify-center text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    {result}
-                    <FiCheckCircle className="ml-3 text-green-500 h-7 w-7" />
+                  <div className="flex-1 w-full sm:w-auto">
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>SGPA (0-10)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 8.5"
+                      value={sem.sgpa}
+                      onChange={(e) => handleChange(index, 'sgpa', e.target.value)}
+                      className={`w-full px-4 py-3 rounded-xl text-xl
+                                   ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'}
+                                   focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all duration-200 shadow-inner`}
+                      min="0"
+                      max="10"
+                      step="0.01"
+                    />
                   </div>
-                  <p className={`mt-2 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Cumulative Grade Point Average
-                  </p>
+                  <div className="flex-1 w-full sm:w-auto">
+                    <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Credits (1-50)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 20"
+                      value={sem.credits}
+                      onChange={(e) => handleChange(index, 'credits', e.target.value)}
+                      className={`w-full px-4 py-3 rounded-xl text-xl
+                                   ${darkMode ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500'}
+                                   focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all duration-200 shadow-inner`}
+                      min="1"
+                      max="50"
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleRemoveSemester(index)}
+                    className={`p-3 rounded-full flex-shrink-0
+                                 ${darkMode ? 'bg-gray-600 text-red-400 hover:bg-red-900' : 'bg-red-50 text-red-600 hover:bg-red-100'}
+                                 transition-colors duration-200 shadow-sm hover:shadow-md`}
+                  >
+                    <FiTrash2 className="h-5 w-5" />
+                  </button>
                 </motion.div>
-              )}
+              ))}
             </AnimatePresence>
           </div>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <button
+              onClick={handleAddSemester}
+              className={`flex items-center justify-center px-6 py-3 rounded-xl text-base font-semibold
+                           ${darkMode ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/40' : 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-300/50'}
+                           transition-all duration-300 transform hover:-translate-y-1`}
+            >
+              <FiPlus className="mr-2 h-5 w-5 inline-block" />
+              Add Semester
+            </button>
+
+            <button
+              onClick={calculateCGPA}
+              disabled={isCalculating}
+              className={`flex items-center justify-center px-6 py-3 rounded-xl text-base font-semibold
+                           ${darkMode ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/40 disabled:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-300/50 disabled:bg-purple-300'}
+                           transition-all duration-300 transform hover:-translate-y-1 disabled:cursor-not-allowed`}
+            >
+              {isCalculating ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Calculating...
+                </>
+              ) : (
+                'Calculate CGPA'
+              )}
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className={`mt-6 p-4 rounded-xl flex items-center justify-center shadow-md
+                             ${darkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-700'}`}
+              >
+                <FiAlertCircle className="mr-3 h-6 w-6" />
+                <p className="text-base font-medium text-center">{error}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {result && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4, type: "spring", stiffness: 120, damping: 15 }}
+                className={`mt-8 p-6 rounded-3xl transition-all text-center shadow-xl
+                             ${darkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}
+              >
+                <h3 className={`text-lg font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Your CGPA</h3>
+                <div className="flex items-center justify-center text-5xl font-extrabold bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">
+                  {result}
+                  <FiCheckCircle className="ml-4 text-green-500 h-8 w-8" />
+                </div>
+                <p className={`mt-3 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Cumulative Grade Point Average
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </div>
