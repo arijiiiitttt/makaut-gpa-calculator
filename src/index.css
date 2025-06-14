@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+
+@font-face {
+  font-family: Alfa;
+  src: url(/public/fonts/Alfa_Slab_One/AlfaSlabOne-Regular.ttf);
+}
+
+.Alfa{
+  font-family: Alfa, sans-serif; 
+}
+
+@font-face {
+  font-family: Limelight; 
+  src: url(/public/fonts/Limelight/Limelight-Regular.ttf);
+}
+
+.Limelight {
+  font-family: Limelight, serif; 
+}
+
+@font-face {
+  font-family: Ultra; 
+  src: url(/public/fonts/Ultra-Regular.ttf);
+}
+
+.Ultra {
+  font-family: Ultra, Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; 
+}
+
+@font-face {
+  font-family: Sigmar; 
+  src: url(/public/fonts/Sigmar-Regular.ttf);
+}
+
+.Sigmar {
+  font-family: Sigmar, cursive; 
+}

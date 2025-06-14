@@ -90,7 +90,7 @@ export default function Hero() {
                     {features.map((feature, index) => (
                         <div key={index} className="flex-1">
                             <div className="flex justify-center md:justify-start mb-4">
-                                <div className="bg-purple-100 p-3 rounded-full">
+                                <div className="bg-purple-200 p-3 rounded-full">
                                     {feature.icon}
                                 </div>
                             </div>

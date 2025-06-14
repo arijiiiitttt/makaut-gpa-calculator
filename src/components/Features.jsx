@@ -48,7 +48,7 @@ export default function Features() {
             <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto px-9">
                 {features.flat().map((f, i) => (
                     <div key={i} className="flex items-start gap-2 text-left">
-                        <div className="text-2xl w-12 h-12 flex items-center justify-center rounded-full bg-purple-300 shrink-0">
+                        <div className="text-2xl w-12 h-12 flex items-center justify-center rounded-full bg-purple-200 shrink-0">
                             {f.icon}
                         </div>                        <div>
                             <h4 className="font-semibold text-lg">{f.title}</h4>
